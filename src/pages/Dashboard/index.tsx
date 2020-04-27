@@ -1,56 +1,66 @@
-import React from 'react';
-
+import React, { useState, FormEvent } from 'react';
 import { FiChevronRight } from 'react-icons/fi';
+
+import api from '../../services/api';
 
 import logoimg from '../../assets/logo.svg';
 
 import { Title, Form, Repositories } from './style';
 
+interface Repository {
+  full_name: string;
+  description: string;
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
+}
+
 const Dashboard: React.FC = () => {
+  const [newRepo, setNewRepo] = useState('');
+  const [repositories, setRepositories] = useState<Repository[]>([]);
+
+  async function handleAddRepository(
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> {
+    event.preventDefault();
+
+    const response = await api.get<Repository>(`/repos/${newRepo}`);
+
+    const repository = response.data;
+
+    setRepositories([...repositories, repository]);
+    setNewRepo('');
+  }
+
   return (
     <>
       <img src={logoimg} alt="Github Explore" />
       <Title>Explorer repositórios no GitHub</Title>
 
-      <Form>
-        <input placeholder="Digite o nome do repositório" />
+      <Form onSubmit={handleAddRepository}>
+        <input
+          value={newRepo}
+          onChange={(e) => setNewRepo(e.target.value)}
+          placeholder="Digite o nome do repositório"
+        />
         <button type="submit">Pesquisar</button>
       </Form>
 
       <Repositories>
-        <a href="teste">
-          <img
-            src="https://avatars3.githubusercontent.com/u/35425708?s=460&u=fe2a2a2f7e53f4a77cab22c39f44831cb1857d31&v=4"
-            alt="Mardonio Costa"
-          />
-          <div>
-            <strong>Mardoniosc/recursos</strong>
-            <p>guardar recursos adicionais para programação</p>
-          </div>
-          <FiChevronRight size={20} />
-        </a>
-        <a href="teste">
-          <img
-            src="https://avatars3.githubusercontent.com/u/35425708?s=460&u=fe2a2a2f7e53f4a77cab22c39f44831cb1857d31&v=4"
-            alt="Mardonio Costa"
-          />
-          <div>
-            <strong>Mardoniosc/recursos</strong>
-            <p>guardar recursos adicionais para programação</p>
-          </div>
-          <FiChevronRight size={20} />
-        </a>
-        <a href="teste">
-          <img
-            src="https://avatars3.githubusercontent.com/u/35425708?s=460&u=fe2a2a2f7e53f4a77cab22c39f44831cb1857d31&v=4"
-            alt="Mardonio Costa"
-          />
-          <div>
-            <strong>Mardoniosc/recursos</strong>
-            <p>guardar recursos adicionais para programação</p>
-          </div>
-          <FiChevronRight size={20} />
-        </a>
+        {repositories.map((repository) => (
+          <a key={repository.full_name} href="teste">
+            <img
+              src={repository.owner.avatar_url}
+              alt={repository.owner.login}
+            />
+            <div>
+              <strong>{repository.full_name}</strong>
+              <p>{repository.description}</p>
+            </div>
+            <FiChevronRight size={20} />
+          </a>
+        ))}
       </Repositories>
     </>
   );
